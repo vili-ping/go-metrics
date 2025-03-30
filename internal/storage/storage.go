@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type Gauge float64
@@ -16,6 +17,7 @@ type MemStorage struct {
 type Storage interface {
 	SetMetric(key string, mType string, val string) (err error)
 	GetMetric(key string) (val string, err error)
+	GetAllMetrics() string
 	DeleteMetric(key string) error
 }
 
@@ -57,4 +59,13 @@ func (m MemStorage) GetMetric(key string) (string, error) {
 	}
 
 	return val, nil
+}
+
+func (m MemStorage) GetAllMetrics() string {
+	var sb strings.Builder
+	for k, v := range m.Vals {
+		fmt.Println(k, v)
+		sb.WriteString(fmt.Sprintf("%s=%s\n", k, v))
+	}
+	return sb.String()
 }

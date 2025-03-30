@@ -1,21 +1,22 @@
 package handlers
 
 import (
-	"bytes"
 	"fmt"
 	"math/rand/v2"
-	"net/http"
 	"runtime"
+
+	"github.com/go-resty/resty/v2"
 )
+
+var client = resty.New()
 
 func sendMetric(mType, name string, val string) error {
 	url := fmt.Sprintf("http://localhost:8080/update/%s/%s/%s", mType, name, val)
 
-	resp, err := http.Post(url, "text/plain", bytes.NewBuffer([]byte{}))
+	_, err := client.R().SetHeader("Content-Type", "text/plain").Post(url)
 	if err != nil {
 		return fmt.Errorf("metric send error %s: %v", name, err)
 	}
-	defer resp.Body.Close()
 
 	return nil
 }
@@ -53,7 +54,6 @@ type Metrics struct {
 }
 
 func (m *Metrics) CollectMetrics() {
-	fmt.Println("=== COLLECT METRICS ===")
 	var stats runtime.MemStats
 	runtime.ReadMemStats(&stats)
 
@@ -89,9 +89,6 @@ func (m *Metrics) CollectMetrics() {
 }
 
 func (m Metrics) SendMetrics() {
-	fmt.Println("==== SEND METRICS ====")
-	fmt.Printf("%+v\n", m)
-
 	sendMetric("gauge", "Alloc", m.Alloc)
 	sendMetric("gauge", "BuckHashSys", m.BuckHashSys)
 	sendMetric("gauge", "Frees", m.Frees)

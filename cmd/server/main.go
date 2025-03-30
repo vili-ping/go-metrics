@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/vili-ping/go-metrics/internal/server/handlers"
 )
 
@@ -16,8 +17,11 @@ func main() {
 }
 
 func run() error {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/update/", handlers.UpdateMetrics)
+	r := chi.NewRouter()
 
-	return http.ListenAndServe(":8080", mux)
+	r.Get("/", handlers.GetMetrics)
+	r.Get("/get/{type}/{name}", handlers.GetMetric)
+	r.Post("/update/{type}/{name}/{value}", handlers.UpdateMetrics)
+
+	return http.ListenAndServe(":8080", r)
 }

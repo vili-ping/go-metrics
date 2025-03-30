@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/vili-ping/go-metrics/internal/storage"
 )
 
@@ -15,20 +15,12 @@ var storageInstance storage.Storage = memStorage
 func UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-	if r.Header.Get("Content-Type") != "text/plain" || r.Method != http.MethodPost {
+	if r.Header.Get("Content-Type") != "text/plain" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	pParts := strings.Split(r.URL.Path, "/")[1:]
-	if len(pParts) != 4 {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	mType, mKey, mValue := pParts[1], pParts[2], pParts[3]
-
-	fmt.Println(mType, mKey, mValue)
+	mType, mKey, mValue := chi.URLParam(r, "type"), chi.URLParam(r, "name"), chi.URLParam(r, "value")
 
 	switch mType {
 	case "gauge":
@@ -63,5 +55,23 @@ func UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Record value"))
+}
+
+func GetMetric(w http.ResponseWriter, r *http.Request) {
+	mName := chi.URLParam(r, "name")
+	value, err := storageInstance.GetMetric(mName)
+
+	fmt.Println(value, err)
+
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	w.Write([]byte(value))
+}
+
+func GetMetrics(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(storageInstance.GetAllMetrics())
+	w.Write([]byte(storageInstance.GetAllMetrics()))
 }
