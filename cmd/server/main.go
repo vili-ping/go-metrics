@@ -9,7 +9,9 @@ import (
 )
 
 func main() {
-	fmt.Println("Server is running!!!")
+	parseArgs()
+
+	fmt.Printf("Server is running on %s\n", flagAddress)
 
 	if err := run(); err != nil {
 		panic(err)
@@ -23,5 +25,5 @@ func run() error {
 	r.Get("/value/{type}/{name}", handlers.GetMetric)
 	r.Post("/update/{type}/{name}/{value}", handlers.UpdateMetrics)
 
-	return http.ListenAndServe(":8080", r)
+	return http.ListenAndServe(flagAddress, r)
 }
