@@ -15,11 +15,6 @@ var storageInstance storage.Storage = memStorage
 func UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-	if r.Header.Get("Content-Type") != "text/plain" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
 	mType, mKey, mValue := chi.URLParam(r, "type"), chi.URLParam(r, "name"), chi.URLParam(r, "value")
 
 	switch mType {
@@ -60,8 +55,6 @@ func UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 func GetMetric(w http.ResponseWriter, r *http.Request) {
 	mName := chi.URLParam(r, "name")
 	value, err := storageInstance.GetMetric(mName)
-
-	fmt.Println(value, err)
 
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
