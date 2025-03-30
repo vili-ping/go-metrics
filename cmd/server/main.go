@@ -20,7 +20,7 @@ func run() error {
 	r := chi.NewRouter()
 
 	r.Get("/", handlers.GetMetrics)
-	r.Get("/get/{type}/{name}", handlers.GetMetric)
+	r.Get("/value/{type}/{name}", handlers.GetMetric)
 	r.Post("/update/{type}/{name}/{value}", handlers.UpdateMetrics)
 
 	return http.ListenAndServe(":8080", r)
