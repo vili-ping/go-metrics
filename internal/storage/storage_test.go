@@ -43,7 +43,7 @@ func TestMemStorage_SetMetric(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &MemStorage{
+			m := &memStorage{
 				Vals: tt.fields.Vals,
 			}
 
@@ -76,7 +76,7 @@ func TestMemStorage_GetAllMetrics(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := MemStorage{
+			m := memStorage{
 				Vals: tt.fields.Vals,
 			}
 
@@ -119,7 +119,7 @@ func TestMemStorage_GetMetric(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := MemStorage{
+			m := memStorage{
 				Vals: tt.fields.Vals,
 			}
 			got, err := m.GetMetric(tt.args.key)

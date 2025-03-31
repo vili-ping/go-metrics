@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -9,8 +8,8 @@ import (
 	"github.com/vili-ping/go-metrics/internal/storage"
 )
 
-var memStorage = &storage.MemStorage{Vals: make(map[string]string)}
-var storageInstance storage.Storage = memStorage
+var memStorage = storage.NewMemStorage()
+var service = storage.NewService(memStorage)
 
 func UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -25,7 +24,7 @@ func UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = storageInstance.SetMetric(mKey, mType, mValue)
+		err = service.Storage.SetMetric(mKey, mType, mValue)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -38,7 +37,7 @@ func UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = storageInstance.SetMetric(mKey, mType, mValue)
+		err = service.Storage.SetMetric(mKey, mType, mValue)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -54,7 +53,7 @@ func UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 
 func GetMetric(w http.ResponseWriter, r *http.Request) {
 	mName := chi.URLParam(r, "name")
-	value, err := storageInstance.GetMetric(mName)
+	value, err := service.Storage.GetMetric(mName)
 
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -65,6 +64,5 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMetrics(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(storageInstance.GetAllMetrics())
-	w.Write([]byte(storageInstance.GetAllMetrics()))
+	w.Write([]byte(service.Storage.GetAllMetrics()))
 }

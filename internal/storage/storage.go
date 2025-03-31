@@ -7,21 +7,30 @@ import (
 	"strings"
 )
 
-type Gauge float64
-type Counter int64
-
-type MemStorage struct {
-	Vals map[string]string
-}
-
-type Storage interface {
+type storage interface {
 	SetMetric(key string, mType string, val string) (err error)
 	GetMetric(key string) (val string, err error)
 	GetAllMetrics() string
 	DeleteMetric(key string) error
 }
 
-func (m *MemStorage) SetMetric(key string, mType string, val string) error {
+type Service struct {
+	Storage storage
+}
+
+func NewService(s storage) *Service {
+	return &Service{Storage: s}
+}
+
+type memStorage struct {
+	Vals map[string]string
+}
+
+func NewMemStorage() *memStorage {
+	return &memStorage{Vals: make(map[string]string)}
+}
+
+func (m *memStorage) SetMetric(key string, mType string, val string) error {
 	if mType == "gauge" {
 		m.Vals[key] = val
 		return nil
@@ -39,7 +48,7 @@ func (m *MemStorage) SetMetric(key string, mType string, val string) error {
 	return errors.New("type metrics is not support")
 }
 
-func (m *MemStorage) DeleteMetric(key string) error {
+func (m *memStorage) DeleteMetric(key string) error {
 	_, exists := m.Vals[key]
 
 	if !exists {
@@ -51,7 +60,7 @@ func (m *MemStorage) DeleteMetric(key string) error {
 	return nil
 }
 
-func (m MemStorage) GetMetric(key string) (string, error) {
+func (m *memStorage) GetMetric(key string) (string, error) {
 	val, exists := m.Vals[key]
 
 	if !exists {
@@ -61,7 +70,7 @@ func (m MemStorage) GetMetric(key string) (string, error) {
 	return val, nil
 }
 
-func (m MemStorage) GetAllMetrics() string {
+func (m *memStorage) GetAllMetrics() string {
 	var sb strings.Builder
 	for k, v := range m.Vals {
 		fmt.Println(k, v)
