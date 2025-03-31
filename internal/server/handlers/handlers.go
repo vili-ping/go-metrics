@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/vili-ping/go-metrics/internal/storage"
+	"github.com/vili-ping/go-metrics/internal/server/service/storage"
 )
 
 var memStorage = storage.NewMemStorage()
