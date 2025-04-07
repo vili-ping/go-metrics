@@ -1,15 +1,14 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/vili-ping/go-metrics/internal/server/service/storage"
+	"github.com/vili-ping/go-metrics/internal/server/repostiroy"
+	"github.com/vili-ping/go-metrics/internal/server/storageservice"
 )
-
-var memStorage = storage.NewMemStorage()
-var service = storage.NewService(memStorage)
 
 func UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -18,31 +17,21 @@ func UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 
 	switch mType {
 	case "gauge":
-		_, err := strconv.ParseFloat(mValue, 64)
+		gauge, err := strconv.ParseFloat(mValue, 64)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		err = service.Storage.SetMetric(mKey, mType, mValue)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
+		storageservice.SetGauge(mKey, mType, gauge)
 	case "counter":
-		_, err := strconv.ParseInt(mValue, 10, 64)
+		counter, err := strconv.Atoi(mValue)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		err = service.Storage.SetMetric(mKey, mType, mValue)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
+		storageservice.SetCounter(mKey, mType, counter)
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -53,10 +42,15 @@ func UpdateMetrics(w http.ResponseWriter, r *http.Request) {
 
 func GetMetric(w http.ResponseWriter, r *http.Request) {
 	mName := chi.URLParam(r, "name")
-	value, err := service.Storage.GetMetric(mName)
+	value, err := storageservice.GetMetric(mName)
+
+	if errors.Is(err, repostiroy.ErrStorageKeyIsNotExist) {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -64,5 +58,5 @@ func GetMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMetrics(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(service.Storage.GetAllMetrics()))
+	w.Write([]byte(storageservice.GetAllMetrics()))
 }
