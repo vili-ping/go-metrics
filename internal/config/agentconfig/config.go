@@ -2,48 +2,45 @@ package agentconfig
 
 import (
 	"flag"
-	"os"
-	"strconv"
+
+	"github.com/caarlos0/env"
+	"github.com/vili-ping/go-metrics/internal/utils"
 )
 
+var cfg agentConfig
+
 type agentConfig struct {
-	Address        string
-	ReportInterval int
-	PoolInterval   int
+	Address        string `env:"ADDRESS" envDefault:"localhost:8080"`
+	ReportInterval int    `env:"REPORT_INTERVAL" envDefault:"10"`
+	PoolInterval   int    `env:"POOL_INTERVAL" envDefault:"2"`
 }
 
-func parseConfAddr(c *agentConfig) {
-	envAddr, envAddrExist := os.LookupEnv("ADDRESS")
-	if envAddrExist {
-		c.Address = envAddr
-	}
-}
-
-func parseConfReportInterval(c *agentConfig) {
-	envReportInterval, envReportIntervalExist := os.LookupEnv("REPORT_INTERVAL")
-	if envReportIntervalExist {
-		c.ReportInterval, _ = strconv.Atoi(envReportInterval)
-	}
-}
-
-func parseConfPoolInterval(c *agentConfig) {
-	envPollInterval, envPoolInterval := os.LookupEnv("POLL_INTERVAL")
-	if envPoolInterval {
-		c.PoolInterval, _ = strconv.Atoi(envPollInterval)
+func parseEnvs() {
+	err := env.Parse(&cfg)
+	if err != nil {
+		panic("env not parse")
 	}
 }
 
 func ParseConfig() agentConfig {
-	var config agentConfig
+	parseEnvs()
 
-	flag.StringVar(&config.Address, "a", "localhost:8080", "address for server")
-	flag.IntVar(&config.ReportInterval, "r", 10, "report interval in seconds")
-	flag.IntVar(&config.PoolInterval, "p", 2, "pool interval in second")
+	flagAddress := flag.String("a", "localhost:8080", "address for server")
+	flagReportInterval := flag.Int("r", 10, "report interval in seconds")
+	flagPoolInterval := flag.Int("p", 2, "pool interval in second")
 	flag.Parse()
 
-	parseConfAddr(&config)
-	parseConfPoolInterval(&config)
-	parseConfReportInterval(&config)
+	if !utils.IsEnvSet("ADDRESS") && *flagAddress != "" {
+		cfg.Address = *flagAddress
+	}
 
-	return config
+	if !utils.IsEnvSet("REPORT_INTERVAL") && *flagReportInterval != 0 {
+		cfg.ReportInterval = *flagReportInterval
+	}
+
+	if !utils.IsEnvSet("POOL_INTERVAL") && *flagPoolInterval != 0 {
+		cfg.PoolInterval = *flagPoolInterval
+	}
+
+	return cfg
 }

@@ -2,7 +2,10 @@ module github.com/vili-ping/go-metrics
 
 go 1.24.1
 
-require github.com/stretchr/testify v1.10.0
+require (
+	github.com/caarlos0/env v3.5.0+incompatible
+	github.com/stretchr/testify v1.10.0
+)
 
 require golang.org/x/net v0.33.0 // indirect
 

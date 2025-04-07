@@ -2,28 +2,33 @@ package serverconfig
 
 import (
 	"flag"
-	"os"
+
+	"github.com/caarlos0/env"
+	"github.com/vili-ping/go-metrics/internal/utils"
 )
 
 type serverConfig struct {
-	Address string
+	Address string `env:"ADDRESS" envDefault:"localhost:8080"`
 }
 
-func parseConfAddr(c *serverConfig) {
-	envAddr, envAddrExist := os.LookupEnv("ADDRESS")
-	if envAddrExist {
-		c.Address = envAddr
-		return
+var cfg serverConfig
+
+func parseEnvs() {
+	err := env.Parse(&cfg)
+	if err != nil {
+		panic("env not parse")
 	}
 }
 
 func ParseConfig() serverConfig {
-	var config serverConfig
+	parseEnvs()
 
-	flag.StringVar(&config.Address, "a", "localhost:8080", "address for server")
+	flagAddress := flag.String("a", "localhost:8080", "address for server")
 	flag.Parse()
 
-	parseConfAddr(&config)
+	if !utils.IsEnvSet("ADDRESS") && *flagAddress != "" {
+		cfg.Address = *flagAddress
+	}
 
-	return config
+	return cfg
 }
