@@ -1,18 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/vili-ping/go-metrics/internal/config/serverconfig"
+	"github.com/vili-ping/go-metrics/internal/logger/serverlogger"
 	"github.com/vili-ping/go-metrics/internal/server/handlers"
 )
 
 var config = serverconfig.ParseConfig()
 
 func main() {
-	fmt.Printf("Server is running on %s\n", config.Address)
+	serverlogger.InitLogger(config.LogLevel)
+	logger := serverlogger.GetLogger()
+
+	logger.Infoln("Server is running on", config.Address)
 
 	if err := run(); err != nil {
 		panic(err)
@@ -21,6 +24,8 @@ func main() {
 
 func run() error {
 	r := chi.NewRouter()
+
+	r.Use(serverlogger.UseHTTPLogging)
 
 	r.Get("/", handlers.GetMetrics)
 	r.Get("/value/{type}/{name}", handlers.GetMetric)
